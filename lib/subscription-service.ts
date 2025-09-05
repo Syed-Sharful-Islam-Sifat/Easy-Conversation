@@ -67,6 +67,10 @@ export class SubscriptionService {
   }
 
   static getConversationLimit(plan: PlanType): number {
+    if (!plan || !PLANS[plan]) {
+      console.warn(`[v0] Invalid plan type: ${plan}, defaulting to free plan`)
+      return PLANS.free.conversationsLimit
+    }
     return PLANS[plan].conversationsLimit
   }
 
