@@ -19,12 +19,17 @@ export default function DashboardPage() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [conversationTopics, setConversationTopics] = useState<Record<number, Topic[]>>({})
   const [loadingConversations, setLoadingConversations] = useState(true)
+  const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    setIsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && isHydrated) {
       router.push("/auth/signin")
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isLoading, router, isHydrated])
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -54,7 +59,7 @@ export default function DashboardPage() {
     }
   }
 
-  if (isLoading) {
+  if (!isHydrated || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
