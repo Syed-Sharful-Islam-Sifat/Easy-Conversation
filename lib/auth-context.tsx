@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check for existing session on mount
     const savedUser = localStorage.getItem("topicflow_user")
+    console.log("Saved user from localStorage:", savedUser)
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser)
