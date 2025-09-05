@@ -31,7 +31,7 @@ export default function LandingPage() {
                 How it Works
               </Link>
               <Link
-                href="#pricing"
+                href="/pricing"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 Pricing

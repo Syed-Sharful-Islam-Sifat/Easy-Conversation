@@ -28,7 +28,6 @@ export function SignInForm() {
     if (result.success) {
       router.push("/dashboard")
     } else {
-      console.log(result)
       setError(result.error || "Sign in failed")
     }
   }

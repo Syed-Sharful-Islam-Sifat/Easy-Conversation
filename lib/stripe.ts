@@ -1,14 +1,10 @@
-"use server"
 import Stripe from "stripe"
 
-console.log("STRIPE_SECRET_KEY:", process.env.STRIPE_SECRET_KEY)
-if (process.env.STRIPE_SECRET_KEY === undefined) {
-  throw new Error("STRIPE_SECRET_KEY is not set")
-}
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-08-27.basil",
-})
+export const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2024-06-20",
+    })
+  : null
 
 export const STRIPE_PRICE_IDS = {
   pro: process.env.STRIPE_PRO_PRICE_ID || "price_pro_monthly",
