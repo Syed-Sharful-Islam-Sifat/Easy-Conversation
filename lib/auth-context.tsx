@@ -3,11 +3,20 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { DatabaseService } from "./database"
+import { SubscriptionService } from "./subscription-service"
+import type { PlanType } from "./stripe"
 
 interface User {
   id: number
   email: string
   name?: string
+  plan: PlanType
+  conversationsUsed: number
+  conversationsLimit: number
+  stripeCustomerId?: string
+  subscriptionId?: string
+  subscriptionStatus?: string
+  currentPeriodEnd?: Date
 }
 
 interface AuthContextType {
@@ -17,6 +26,9 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>
   signOut: () => void
   isAuthenticated: boolean
+  incrementUsage: () => Promise<void>
+  refreshUserData: () => Promise<void>
+  canSaveConversation: () => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -30,13 +42,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedUser = localStorage.getItem("topicflow_user")
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser))
+        const parsedUser = JSON.parse(savedUser)
+        if (!parsedUser.plan) {
+          parsedUser.plan = "free"
+          parsedUser.conversationsUsed = 0
+          parsedUser.conversationsLimit = 3
+        }
+        setUser(parsedUser)
       } catch (error) {
         localStorage.removeItem("topicflow_user")
       }
     }
     setIsLoading(false)
   }, [])
+
+  const refreshUserData = async () => {
+    if (!user) return
+
+    try {
+      const dbUser = await DatabaseService.getUserByEmail(user.email)
+      if (dbUser) {
+        const subscription = await SubscriptionService.getSubscriptionByUserId(user.id.toString())
+        const plan = SubscriptionService.getUserPlan(subscription)
+        const limit = SubscriptionService.getConversationLimit(plan)
+
+        const updatedUser: User = {
+          ...user,
+          plan,
+          conversationsLimit: limit,
+          conversationsUsed: dbUser.conversationsUsed || 0,
+          stripeCustomerId: subscription?.stripeCustomerId,
+          subscriptionId: subscription?.stripeSubscriptionId,
+          subscriptionStatus: subscription?.status,
+          currentPeriodEnd: subscription?.currentPeriodEnd,
+        }
+
+        setUser(updatedUser)
+        localStorage.setItem("topicflow_user", JSON.stringify(updatedUser))
+      }
+    } catch (error) {
+      console.error("Error refreshing user data:", error)
+    }
+  }
+
+  const incrementUsage = async () => {
+    if (!user) return
+
+    try {
+      await DatabaseService.incrementUserUsage(user.id)
+      const updatedUser = {
+        ...user,
+        conversationsUsed: user.conversationsUsed + 1,
+      }
+      setUser(updatedUser)
+      localStorage.setItem("topicflow_user", JSON.stringify(updatedUser))
+    } catch (error) {
+      console.error("Error incrementing usage:", error)
+    }
+  }
+
+  const canSaveConversation = () => {
+    if (!user) return false
+    return SubscriptionService.canSaveConversation(user.plan, user.conversationsUsed)
+  }
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true)
@@ -46,10 +114,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (existingUser && password.length >= 6) {
         // TODO: Add proper password hashing and verification
+        const subscription = await SubscriptionService.getSubscriptionByUserId(existingUser.id.toString())
+        const plan = SubscriptionService.getUserPlan(subscription)
+        const limit = SubscriptionService.getConversationLimit(plan)
+
         const user: User = {
           id: existingUser.id,
           email: existingUser.email,
           name: existingUser.name,
+          plan,
+          conversationsUsed: existingUser.conversationsUsed || 0,
+          conversationsLimit: limit,
+          stripeCustomerId: subscription?.stripeCustomerId,
+          subscriptionId: subscription?.stripeSubscriptionId,
+          subscriptionStatus: subscription?.status,
+          currentPeriodEnd: subscription?.currentPeriodEnd,
         }
 
         setUser(user)
@@ -86,6 +165,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: dbUser.id,
           email: dbUser.email,
           name: dbUser.name,
+          plan: "free",
+          conversationsUsed: 0,
+          conversationsLimit: 3,
         }
 
         setUser(user)
@@ -114,6 +196,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     isAuthenticated: !!user,
+    incrementUsage,
+    refreshUserData,
+    canSaveConversation,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

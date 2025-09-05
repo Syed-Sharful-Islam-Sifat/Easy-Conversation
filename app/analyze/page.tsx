@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { ConversationInput } from "@/components/conversation/conversation-input"
+import { UsageLimitModal } from "@/components/usage-limit-modal"
+import { UsageWarningBanner } from "@/components/usage-warning-banner"
 import { Button } from "@/components/ui/button"
 import { Brain, ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -10,8 +12,9 @@ import { useRouter } from "next/navigation"
 import { DatabaseService } from "@/lib/database"
 
 export default function AnalyzePage() {
-  const { isAuthenticated, isLoading, user } = useAuth()
+  const { isAuthenticated, isLoading, user, incrementUsage, canSaveConversation } = useAuth()
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [showUsageLimitModal, setShowUsageLimitModal] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -22,6 +25,11 @@ export default function AnalyzePage() {
 
   const handleAnalyze = async (conversation: string, title: string) => {
     if (!user) return
+
+    if (!canSaveConversation()) {
+      setShowUsageLimitModal(true)
+      return
+    }
 
     setIsAnalyzing(true)
 
@@ -55,6 +63,8 @@ export default function AnalyzePage() {
         }))
 
         await DatabaseService.createTopics(savedConversation.id, topicsToSave)
+
+        await incrementUsage()
 
         router.push(`/conversation/${savedConversation.id}`)
       } else {
@@ -117,7 +127,22 @@ export default function AnalyzePage() {
             </p>
           </div>
 
+          {user && (
+            <UsageWarningBanner plan={user.plan} usage={user.conversationsUsed} limit={user.conversationsLimit} />
+          )}
+
           <ConversationInput onAnalyze={handleAnalyze} isLoading={isAnalyzing} isDemo={false} />
+
+          {user && (
+            <UsageLimitModal
+              isOpen={showUsageLimitModal}
+              onClose={() => setShowUsageLimitModal(false)}
+              currentPlan={user.plan}
+              usage={user.conversationsUsed}
+              limit={user.conversationsLimit}
+              isAtLimit={!canSaveConversation()}
+            />
+          )}
         </div>
       </main>
     </div>

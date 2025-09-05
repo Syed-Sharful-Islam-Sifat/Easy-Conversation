@@ -4,6 +4,12 @@ export interface User {
   id: number
   email: string
   name?: string
+  plan?: string
+  conversationsUsed?: number
+  stripeCustomerId?: string
+  subscriptionId?: string
+  subscriptionStatus?: string
+  currentPeriodEnd?: Date
   created_at: string
 }
 
@@ -26,6 +32,20 @@ export interface Topic {
   created_at: string
 }
 
+export interface Subscription {
+  id: number
+  userId: number
+  stripeCustomerId: string
+  stripeSubscriptionId: string
+  plan: string
+  status: string
+  currentPeriodStart: Date
+  currentPeriodEnd: Date
+  cancelAtPeriodEnd: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 // Mock database functions - will be replaced with real database calls
 export class DatabaseService {
   // User operations
@@ -35,6 +55,8 @@ export class DatabaseService {
       id: Date.now(),
       email,
       name,
+      plan: "free",
+      conversationsUsed: 0,
       created_at: new Date().toISOString(),
     }
 
@@ -56,6 +78,50 @@ export class DatabaseService {
     // TODO: Implement with real database
     const users = this.getStoredUsers()
     return users.find((u) => u.id === id) || null
+  }
+
+  static async incrementUserUsage(userId: number): Promise<void> {
+    // TODO: Implement with real database
+    const users = this.getStoredUsers()
+    const userIndex = users.findIndex((u) => u.id === userId)
+
+    if (userIndex !== -1) {
+      users[userIndex].conversationsUsed = (users[userIndex].conversationsUsed || 0) + 1
+      localStorage.setItem("users", JSON.stringify(users))
+    }
+  }
+
+  static async updateUserSubscription(
+    userId: number,
+    plan: string,
+    stripeCustomerId?: string,
+    subscriptionId?: string,
+    subscriptionStatus?: string,
+    currentPeriodEnd?: Date,
+  ): Promise<void> {
+    // TODO: Implement with real database
+    const users = this.getStoredUsers()
+    const userIndex = users.findIndex((u) => u.id === userId)
+
+    if (userIndex !== -1) {
+      users[userIndex].plan = plan
+      users[userIndex].stripeCustomerId = stripeCustomerId
+      users[userIndex].subscriptionId = subscriptionId
+      users[userIndex].subscriptionStatus = subscriptionStatus
+      users[userIndex].currentPeriodEnd = currentPeriodEnd
+      localStorage.setItem("users", JSON.stringify(users))
+    }
+  }
+
+  static async resetUserUsage(userId: number): Promise<void> {
+    // TODO: Implement with real database
+    const users = this.getStoredUsers()
+    const userIndex = users.findIndex((u) => u.id === userId)
+
+    if (userIndex !== -1) {
+      users[userIndex].conversationsUsed = 0
+      localStorage.setItem("users", JSON.stringify(users))
+    }
   }
 
   // Conversation operations
@@ -115,6 +181,45 @@ export class DatabaseService {
     return topics.filter((t) => t.conversation_id === conversationId)
   }
 
+  static async createSubscription(
+    subscription: Omit<Subscription, "id" | "createdAt" | "updatedAt">,
+  ): Promise<Subscription> {
+    // TODO: Implement with real database
+    const newSubscription: Subscription = {
+      id: Date.now(),
+      ...subscription,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    const subscriptions = this.getStoredSubscriptions()
+    subscriptions.push(newSubscription)
+    localStorage.setItem("subscriptions", JSON.stringify(subscriptions))
+
+    return newSubscription
+  }
+
+  static async getSubscriptionByUserId(userId: number): Promise<Subscription | null> {
+    // TODO: Implement with real database
+    const subscriptions = this.getStoredSubscriptions()
+    return subscriptions.find((s) => s.userId === userId) || null
+  }
+
+  static async updateSubscription(subscriptionId: string, updates: Partial<Subscription>): Promise<void> {
+    // TODO: Implement with real database
+    const subscriptions = this.getStoredSubscriptions()
+    const subscriptionIndex = subscriptions.findIndex((s) => s.stripeSubscriptionId === subscriptionId)
+
+    if (subscriptionIndex !== -1) {
+      subscriptions[subscriptionIndex] = {
+        ...subscriptions[subscriptionIndex],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      }
+      localStorage.setItem("subscriptions", JSON.stringify(subscriptions))
+    }
+  }
+
   // Helper methods for localStorage (temporary)
   private static getStoredUsers(): User[] {
     if (typeof window === "undefined") return []
@@ -131,6 +236,12 @@ export class DatabaseService {
   private static getStoredTopics(): Topic[] {
     if (typeof window === "undefined") return []
     const stored = localStorage.getItem("topics")
+    return stored ? JSON.parse(stored) : []
+  }
+
+  private static getStoredSubscriptions(): Subscription[] {
+    if (typeof window === "undefined") return []
+    const stored = localStorage.getItem("subscriptions")
     return stored ? JSON.parse(stored) : []
   }
 }

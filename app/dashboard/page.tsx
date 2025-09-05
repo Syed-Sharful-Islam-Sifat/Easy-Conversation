@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { SubscriptionCard } from "@/components/subscription/subscription-card"
+import { UsageWarningBanner } from "@/components/usage-warning-banner"
 import { Brain, LogOut, Plus, MessageSquare, Calendar, Hash } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -108,7 +110,23 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">Manage your AI conversations and extracted topics</p>
           </div>
 
+          {user && (
+            <UsageWarningBanner plan={user.plan} usage={user.conversationsUsed} limit={user.conversationsLimit} />
+          )}
+
           <div className="grid gap-6 lg:grid-cols-4">
+            <div className="lg:col-span-4 mb-6">
+              {user && (
+                <SubscriptionCard
+                  plan={user.plan}
+                  usage={user.conversationsUsed}
+                  subscriptionStatus={user.subscriptionStatus}
+                  currentPeriodEnd={user.currentPeriodEnd}
+                  stripeCustomerId={user.stripeCustomerId}
+                />
+              )}
+            </div>
+
             {/* New Conversation Card */}
             <Card className="border-dashed border-2 border-border/50 hover:border-border transition-colors">
               <CardHeader className="text-center">
@@ -125,23 +143,31 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Quick Stats */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Quick Stats</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Conversations</span>
+                  <span className="text-sm text-muted-foreground">Plan</span>
+                  <Badge variant="outline" className="capitalize">
+                    {user?.plan || "Free"}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">This Month</span>
+                  <span className="text-lg font-semibold">
+                    {user?.conversationsUsed || 0}
+                    {user?.conversationsLimit !== -1 && ` / ${user?.conversationsLimit}`}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Total Conversations</span>
                   <span className="text-lg font-semibold">{conversations.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Topics Extracted</span>
                   <span className="text-lg font-semibold">{totalTopics}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">This Month</span>
-                  <span className="text-lg font-semibold">{thisMonthConversations}</span>
                 </div>
               </CardContent>
             </Card>
