@@ -1,10 +1,47 @@
+"use client"
+
+import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, MessageSquare, Brain, Search, Zap, Users, Shield } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 
 export default function LandingPage() {
+  const { isAuthenticated, user, isLoading } = useAuth()
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  if (!isHydrated || isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex h-16 items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                  <Brain className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <span className="text-xl font-semibold text-foreground">TopicFlow</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="animate-pulse bg-muted rounded h-8 w-16"></div>
+                <div className="animate-pulse bg-muted rounded h-8 w-20"></div>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -38,12 +75,26 @@ export default function LandingPage() {
               </Link>
             </nav>
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/auth/signin">Sign In</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link href="/auth/signup">Get Started</Link>
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <span className="text-sm text-muted-foreground">Welcome, {user?.name}</span>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/dashboard">Dashboard</Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link href="/analyze">Analyze</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/auth/signin">Sign In</Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link href="/auth/signup">Get Started</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -65,15 +116,31 @@ export default function LandingPage() {
               ease and never lose track of important insights again.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Button size="lg" className="h-12 px-8" asChild>
-                <Link href="/demo">
-                  Try Free Demo
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" className="h-12 px-8 bg-transparent">
-                Watch Demo
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <Button size="lg" className="h-12 px-8" asChild>
+                    <Link href="/analyze">
+                      Analyze Conversation
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="lg" className="h-12 px-8 bg-transparent" asChild>
+                    <Link href="/dashboard">View Library</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button size="lg" className="h-12 px-8" asChild>
+                    <Link href="/demo">
+                      Try Free Demo
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="lg" className="h-12 px-8 bg-transparent">
+                    Watch Demo
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -224,15 +291,31 @@ export default function LandingPage() {
               Start for free. No credit card required. Try all features before you commit.
             </p>
             <div className="mt-8 flex items-center justify-center gap-x-6">
-              <Button size="lg" className="h-12 px-8" asChild>
-                <Link href="/auth/signup">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" className="h-12 px-8 bg-transparent" asChild>
-                <Link href="/demo">Try Demo</Link>
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <Button size="lg" className="h-12 px-8" asChild>
+                    <Link href="/analyze">
+                      Analyze New Conversation
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="lg" className="h-12 px-8 bg-transparent" asChild>
+                    <Link href="/dashboard">View Dashboard</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button size="lg" className="h-12 px-8" asChild>
+                    <Link href="/auth/signup">
+                      Start Free Trial
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="lg" className="h-12 px-8 bg-transparent" asChild>
+                    <Link href="/demo">Try Demo</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

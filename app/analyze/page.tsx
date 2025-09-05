@@ -15,13 +15,18 @@ export default function AnalyzePage() {
   const { isAuthenticated, isLoading, user, incrementUsage, canSaveConversation } = useAuth()
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [showUsageLimitModal, setShowUsageLimitModal] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    setIsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && isHydrated) {
       router.push("/auth/signin")
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isLoading, router, isHydrated])
 
   const handleAnalyze = async (conversation: string, title: string) => {
     if (!user) return
@@ -79,7 +84,7 @@ export default function AnalyzePage() {
     }
   }
 
-  if (isLoading) {
+  if (!isHydrated || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
