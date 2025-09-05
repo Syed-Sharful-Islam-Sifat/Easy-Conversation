@@ -67,20 +67,6 @@ export class SubscriptionService {
   }
 
   static getConversationLimit(plan: PlanType): number {
-    console.log(`[v0] Getting conversation limit for plan: ${plan}`)
-    console.log(`[v0] PLANS object:`, PLANS)
-    console.log(`[v0] PLANS.free:`, PLANS.free)
-
-    if (!PLANS) {
-      console.error(`[v0] PLANS object is undefined`)
-      return 3 // Default to free plan limit
-    }
-
-    if (!PLANS.free) {
-      console.error(`[v0] PLANS.free is undefined`)
-      return 3 // Default to free plan limit
-    }
-
     if (!plan || !PLANS[plan]) {
       console.warn(`[v0] Invalid plan type: ${plan}, defaulting to free plan`)
       return PLANS.free.conversationsLimit
