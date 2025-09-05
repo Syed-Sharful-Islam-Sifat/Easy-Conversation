@@ -25,7 +25,12 @@ export function SubscriptionCard({
 }: SubscriptionCardProps) {
   const [isLoading, setIsLoading] = useState(false)
   const { user } = useAuth()
-  const planDetails = PLANS[plan]
+
+  const planDetails = PLANS[plan] || {
+    name: "Unknown",
+    conversationsLimit: 0,
+    priceId: null,
+  }
 
   const handleManageBilling = async () => {
     if (!stripeCustomerId) return
@@ -81,6 +86,17 @@ export function SubscriptionCard({
   const getUsagePercentage = () => {
     if (planDetails.conversationsLimit === -1) return 0
     return (usage / planDetails.conversationsLimit) * 100
+  }
+
+  if (!plan || !PLANS[plan]) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Invalid Plan</CardTitle>
+          <CardDescription>Please contact support</CardDescription>
+        </CardHeader>
+      </Card>
+    )
   }
 
   return (
