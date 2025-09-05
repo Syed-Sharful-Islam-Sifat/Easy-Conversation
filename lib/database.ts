@@ -48,8 +48,16 @@ export interface Subscription {
 
 // Mock database functions - will be replaced with real database calls
 export class DatabaseService {
+  private static isClient(): boolean {
+    return typeof window !== "undefined"
+  }
+
   // User operations
   static async createUser(email: string, passwordHash: string, name?: string): Promise<User> {
+    if (!this.isClient()) {
+      throw new Error("Database operations not available on server")
+    }
+
     // TODO: Implement with real database
     const user: User = {
       id: Date.now(),
@@ -69,18 +77,30 @@ export class DatabaseService {
   }
 
   static async getUserByEmail(email: string): Promise<User | null> {
+    if (!this.isClient()) {
+      return null
+    }
+
     // TODO: Implement with real database
     const users = this.getStoredUsers()
     return users.find((u) => u.email === email) || null
   }
 
   static async getUserById(id: number): Promise<User | null> {
+    if (!this.isClient()) {
+      return null
+    }
+
     // TODO: Implement with real database
     const users = this.getStoredUsers()
     return users.find((u) => u.id === id) || null
   }
 
   static async incrementUserUsage(userId: number): Promise<void> {
+    if (!this.isClient()) {
+      return
+    }
+
     // TODO: Implement with real database
     const users = this.getStoredUsers()
     const userIndex = users.findIndex((u) => u.id === userId)
@@ -99,6 +119,10 @@ export class DatabaseService {
     subscriptionStatus?: string,
     currentPeriodEnd?: Date,
   ): Promise<void> {
+    if (!this.isClient()) {
+      return
+    }
+
     // TODO: Implement with real database
     const users = this.getStoredUsers()
     const userIndex = users.findIndex((u) => u.id === userId)
@@ -114,6 +138,10 @@ export class DatabaseService {
   }
 
   static async resetUserUsage(userId: number): Promise<void> {
+    if (!this.isClient()) {
+      return
+    }
+
     // TODO: Implement with real database
     const users = this.getStoredUsers()
     const userIndex = users.findIndex((u) => u.id === userId)
@@ -126,6 +154,10 @@ export class DatabaseService {
 
   // Conversation operations
   static async createConversation(userId: number, title: string, content: string): Promise<Conversation> {
+    if (!this.isClient()) {
+      throw new Error("Database operations not available on server")
+    }
+
     // TODO: Implement with real database
     const conversation: Conversation = {
       id: Date.now(),
@@ -144,12 +176,20 @@ export class DatabaseService {
   }
 
   static async getConversationsByUserId(userId: number): Promise<Conversation[]> {
+    if (!this.isClient()) {
+      return []
+    }
+
     // TODO: Implement with real database
     const conversations = this.getStoredConversations()
     return conversations.filter((c) => c.user_id === userId)
   }
 
   static async getConversationById(id: number): Promise<Conversation | null> {
+    if (!this.isClient()) {
+      return null
+    }
+
     // TODO: Implement with real database
     const conversations = this.getStoredConversations()
     return conversations.find((c) => c.id === id) || null
@@ -160,6 +200,10 @@ export class DatabaseService {
     conversationId: number,
     topics: Omit<Topic, "id" | "conversation_id" | "created_at">[],
   ): Promise<Topic[]> {
+    if (!this.isClient()) {
+      return []
+    }
+
     // TODO: Implement with real database
     const newTopics: Topic[] = topics.map((topic) => ({
       id: Date.now() + Math.random(),
@@ -176,6 +220,10 @@ export class DatabaseService {
   }
 
   static async getTopicsByConversationId(conversationId: number): Promise<Topic[]> {
+    if (!this.isClient()) {
+      return []
+    }
+
     // TODO: Implement with real database
     const topics = this.getStoredTopics()
     return topics.filter((t) => t.conversation_id === conversationId)
@@ -184,6 +232,10 @@ export class DatabaseService {
   static async createSubscription(
     subscription: Omit<Subscription, "id" | "createdAt" | "updatedAt">,
   ): Promise<Subscription> {
+    if (!this.isClient()) {
+      throw new Error("Database operations not available on server")
+    }
+
     // TODO: Implement with real database
     const newSubscription: Subscription = {
       id: Date.now(),
@@ -200,12 +252,20 @@ export class DatabaseService {
   }
 
   static async getSubscriptionByUserId(userId: number): Promise<Subscription | null> {
+    if (!this.isClient()) {
+      return null
+    }
+
     // TODO: Implement with real database
     const subscriptions = this.getStoredSubscriptions()
     return subscriptions.find((s) => s.userId === userId) || null
   }
 
   static async updateSubscription(subscriptionId: string, updates: Partial<Subscription>): Promise<void> {
+    if (!this.isClient()) {
+      return
+    }
+
     // TODO: Implement with real database
     const subscriptions = this.getStoredSubscriptions()
     const subscriptionIndex = subscriptions.findIndex((s) => s.stripeSubscriptionId === subscriptionId)
